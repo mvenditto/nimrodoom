@@ -1,18 +1,6 @@
 {.emit: """
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <stdarg.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <errno.h>
 #include "doomstat.h"
-#include "i_system.h"
 #include "v_video.h"
-#include "m_argv.h"
 #include "d_main.h"
 #include "doomdef.h"
 """.}
@@ -21,6 +9,8 @@ import os
 {.passC:"-I" & currentSourcePath().splitPath.head .}
 
 import sdl
+import doomdef
+import d_event
 
 var screen: PSurface
 var firsttimee = true
@@ -34,6 +24,7 @@ const SCREENHEIGHT: cint = 200
 
 proc I_Quit {.importc, header:"i_system.h", noconv.}
 proc I_Error(error: cstring) {.importc, header:"i_system.h", noconv.}
+proc D_PostEvent*(ev: ptr event_t) {.importc, header:"d_main.h", noconv.}
 
 var screens* {.importc, header:"v_video.h".}: array[5, ptr UncheckedArray[byte]]
 
@@ -118,11 +109,84 @@ proc I_ReadScreen*(src: ptr UncheckedArray[byte]) {.exportc.} =
     echo "> I_ReadScreen"
     copyMem(src, screens[0], SCREENWIDTH * SCREENHEIGHT)
 
-proc xlatekey*(event: PEvent): int {.exportc.}=
-    return 0
+proc xlatekey*(event: PEvent): cint {.exportc.} =
+
+    var ke = evKeyboard(event);
+    var rc: cint;
+    case ke.keysym.sym:
+        of K_LEFT:
+            rc = KEY_LEFTARROW
+        of K_RIGHT:
+            rc = KEY_RIGHTARROW
+        of K_DOWN:
+            rc = KEY_DOWNARROW
+        of K_UP:
+            rc = KEY_UPARROW
+        of K_ESCAPE:
+            rc = KEY_ESCAPE
+        of K_RETURN:
+            rc = KEY_ENTER
+        of K_TAB:
+            rc = KEY_TAB
+        of K_F1:
+            rc = KEY_F1
+        of K_F2:
+            rc = KEY_F2
+        of K_F3:
+            rc = KEY_F3
+        of K_F4:
+            rc = KEY_F4
+        of K_F5:
+            rc = KEY_F5
+        of K_F6:
+            rc = KEY_F6
+        of K_F7:
+            rc = KEY_F7
+        of K_F8:
+            rc = KEY_F8
+        of K_F9:
+            rc = KEY_F9
+        of K_F10:
+            rc = KEY_F10
+        of K_F11:
+            rc = KEY_F11
+        of K_F12:
+            rc = KEY_F12
+        of K_BACKSPACE, K_DELETE:
+            rc = KEY_BACKSPACE
+        of K_PAUSE:
+            rc = KEY_PAUSE
+        of K_KP_EQUALS, K_EQUALS:
+            rc = KEY_EQUALS
+        of K_KP_MINUS, K_MINUS:
+            rc = KEY_MINUS
+        of K_RSHIFT, K_LSHIFT:
+            rc = KEY_RSHIFT
+        of K_LCTRL, K_RCTRL:
+            rc = KEY_RCTRL
+        of K_LALT, K_LMETA, K_RALT, K_RMETA:
+            rc = KEY_RALT  
+        else: # TODO: is broken
+            if rc >= K_SPACE and rc <= K_DELETE:
+                rc = rc - K_SPACE + 32 # ' '
+            if rc >= 65 and rc <= 90: # 'A' 'Z'
+                rc = rc - 65 + 61
+    return rc
 
 proc I_ProcessEvent*(sdl_event: PEvent) {.exportc.} =
-    discard
+    var event: event_t
+    case sdl_event.kind:
+        of KEYDOWN:
+            event.`type` = ev_keydown
+            event.data1 = xlatekey(sdl_event)
+            discard
+        of KEYUP:
+            event.`type` = ev_keyup
+            event.data1 = xlatekey(sdl_event)
+            discard;
+        else:
+            return
+    D_PostEvent(addr(event))
 
 proc I_StartTic() {.exportc.} =
     echo "> I_StartTic"
@@ -131,6 +195,7 @@ proc I_StartTic() {.exportc.} =
         return
 
     var event: sdl.Event
-    while pollEvent(addr(event)) == 1:  
+    while pollEvent(addr(event)) != 0:
+        echo " >process event"  
         I_ProcessEvent(addr(event))   
     
