@@ -182,6 +182,8 @@ proc I_ProcessEvent*(sdl_event: PEvent) {.exportc.} =
             event.`type` = ev_keyup
             event.data1 = xlatekey(sdl_event)
             discard;
+        of QUITEV:
+            I_Quit();    
         else:
             return
     D_PostEvent(addr(event))
