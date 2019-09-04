@@ -112,8 +112,8 @@ proc I_ReadScreen*(src: ptr UncheckedArray[byte]) {.exportc.} =
 proc xlatekey*(event: PEvent): cint {.exportc.} =
 
     var ke = evKeyboard(event);
-    var rc: cint;
-    case ke.keysym.sym:
+    var rc: cint = ke.keysym.sym
+    case rc:
         of K_LEFT:
             rc = KEY_LEFTARROW
         of K_RIGHT:
@@ -166,11 +166,9 @@ proc xlatekey*(event: PEvent): cint {.exportc.} =
             rc = KEY_RCTRL
         of K_LALT, K_LMETA, K_RALT, K_RMETA:
             rc = KEY_RALT  
-        else: # TODO: is broken
-            if rc >= K_SPACE and rc <= K_DELETE:
-                rc = rc - K_SPACE + 32 # ' '
-            if rc >= 65 and rc <= 90: # 'A' 'Z'
-                rc = rc - 65 + 61
+        else: 
+            if rc >= 65 and rc <= 90: # [a-zA-Z]
+                rc = rc + 32
     return rc
 
 proc I_ProcessEvent*(sdl_event: PEvent) {.exportc.} =
