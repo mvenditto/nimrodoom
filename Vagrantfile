@@ -18,6 +18,7 @@ $script = <<-SCRIPT
     sudo cp ./lib/nimbase.h /usr/include/ 
     cd /vagrant/
     nimble install sdl1 -y
+    nimble install imageman -y
     nim -v
     touch .nim-lock
   fi
