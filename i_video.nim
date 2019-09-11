@@ -56,21 +56,21 @@ proc I_InitGraphics*(): void {.exportc.} =
     screens[0] = cast[ptr UncheckedArray[byte]](screen.pixels)
     
 proc I_ShutdownGraphics*(): void {.exportc.} =
-    echo "> I_ShutdownGraphics"
+    #echo "> I_ShutdownGraphics"
     freeSurface(screen)
 
 proc I_UpdateNoBlit*(): void {.exportc.} =
-    echo "> I_UpdateNoBlit"
+    #echo "> I_UpdateNoBlit"
     discard
 
 proc I_FinishUpdate*(): void {.exportc.} =
-    echo "> I_FinishUpdate"
+    #echo "> I_FinishUpdate"
     discard flip(screen)
 
 template `\\`(x: untyped): untyped = cast[ptr type(x[0])](addr x)
 
 proc I_SetPalette*(palette: ptr byte): void {.exportc.} =
-    echo "> I_SetPalette"
+    #echo "> I_SetPalette"
 
     echo $palette[]
 
@@ -102,11 +102,11 @@ proc I_SetPalette*(palette: ptr byte): void {.exportc.} =
     
     
 proc I_StartFrame*() {.exportc.} = 
-    echo "> I_StartFrame"
+    #echo "> I_StartFrame"
     discard
 
 proc I_ReadScreen*(src: ptr UncheckedArray[byte]) {.exportc.} =
-    echo "> I_ReadScreen"
+    #echo "> I_ReadScreen"
     copyMem(src, screens[0], SCREENWIDTH * SCREENHEIGHT)
 
 proc xlatekey*(event: PEvent): cint {.exportc.} =
@@ -189,13 +189,13 @@ proc I_ProcessEvent*(sdl_event: PEvent) {.exportc.} =
     D_PostEvent(addr(event))
 
 proc I_StartTic() {.exportc.} =
-    echo "> I_StartTic"
+    #echo "> I_StartTic"
     if screen == nil:
         echo "> screen is nil"
         return
 
     var event: sdl.Event
     while pollEvent(addr(event)) != 0:
-        echo " >process event"  
+        #echo " >process event"  
         I_ProcessEvent(addr(event))   
     

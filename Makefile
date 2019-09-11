@@ -63,7 +63,6 @@ OBJS=				\
 		$(O)/r_segs.o			\
 		$(O)/r_sky.o			\
 		$(O)/r_things.o		\
-		$(O)/w_wad.o			\
 		$(O)/wi_stuff.o		\
 		$(O)/v_video.o		\
 		$(O)/st_lib.o			\
