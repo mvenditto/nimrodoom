@@ -27,7 +27,7 @@
 | `m_menu.c` |  |  |  |
 | `m_misc.c` |  |  |  |
 | `m_random.c` |  |  |  |
-| `m_swap.c` | :heavy_check_mark: | | `m_swap.nim`, `m_swap_h.nim` |
+| `m_swap.c` | :heavy_check_mark: | | `m_swap.nim`, `m_swap_h*.nim` |
 | `p_ceilng.c` |  |  |  |
 | `p_doors.c` |  |  |  |
 | `p_enemy.c` |  |  |  |
@@ -63,4 +63,4 @@
 | `v_video.c` |  |  |  |
 | `wi_stuff.c` |  |  |  |
 | `w_wad.c` | :construction: | :hankey: | `w_wad.nim` |
-| `z_zone.c` |  |  |  |
+| `z_zone.c` |  |  | `z_zone_h.nim*` |
