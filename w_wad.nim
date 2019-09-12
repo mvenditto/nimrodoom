@@ -10,11 +10,7 @@ import streams
 import colorize
 import m_swap_h
 
-
-const debug = false
-
-
-when not debug:
+when not defined(debug):
     import z_zone_h
     proc I_Error(msg: cstring) {.importc, header:"i_system.h", varargs.}
 else:

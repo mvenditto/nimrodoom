@@ -2,9 +2,7 @@ import strutils
 import strformat
 import os
 
-const debug = true
-
-when debug:
+when defined(debug):
     proc I_Error(msg: cstring) = 
         echo msg
     proc I_ZoneBase(size: var cint): ptr byte = 
