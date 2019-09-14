@@ -58,7 +58,7 @@ proc I_InitGraphics*(): void {.exportc.} =
     X_width = SCREENWIDTH * multiply;
     X_height = SCREENHEIGHT * multiply;
 
-    if init(sdl.InitEverything) == -1:
+    if init(sdl.InitVideo) == -1:
         I_Error("SDL initializing error")
     
     app.window = sdl.createWindow(
