@@ -36,8 +36,10 @@ var surface: Surface
 var psurface: Surface
 var texture: Texture
 
-const SCREENWIDTH: cint = 320 
-const SCREENHEIGHT: cint = 200
+const SCREENWIDTH: cint = SCREENWIDTH 
+const SCREENHEIGHT: cint = SCREENHEIGHT
+const WINWIDTH: cint = SCREENWIDTH 
+const WINHEIGHT: cint = SCREENHEIGHT
 
 proc I_Quit {.importc, header:"i_system.h", noconv.}
 proc I_Error(error: cstring) {.importc, header:"i_system.h", noconv.}
@@ -56,8 +58,8 @@ proc I_InitGraphics*(): void {.exportc.} =
 
     setControlCHook(I_Quit);
 
-    X_width = SCREENWIDTH * multiply;
-    X_height = SCREENHEIGHT * multiply;
+    X_width = SCREENWIDTH;
+    X_height = SCREENHEIGHT;
 
     if init(sdl.InitVideo) == -1:
         I_Error("SDL initializing error")
@@ -66,8 +68,8 @@ proc I_InitGraphics*(): void {.exportc.} =
         Title,
         sdl.WindowPosUndefined,
         sdl.WindowPosUndefined,
-        X_width * 2,
-        X_height * 2,
+        WINWIDTH,
+        WINHEIGHT,
         WindowFlags
     )
 
@@ -80,13 +82,13 @@ proc I_InitGraphics*(): void {.exportc.} =
         I_Error(&"ERROR: Can't create renderer: {sdl.getError()}")
     
     discard sdl.setHint(sdl.HINT_RENDER_SCALE_QUALITY, "nearest")
-    discard app.renderer.renderSetLogicalSize(320, 200)
+    discard app.renderer.renderSetLogicalSize(SCREENWIDTH, SCREENHEIGHT)
 
-    surface = sdl.createRGBSurface(0, 320, 200, 8, 0, 0, 0, 0)
-    psurface = sdl.createRGBSurface(0, 320, 200, 32, 0, 0, 0, 0)
+    surface = sdl.createRGBSurface(0, SCREENWIDTH, SCREENHEIGHT, 8, 0, 0, 0, 0)
+    psurface = sdl.createRGBSurface(0, SCREENWIDTH, SCREENHEIGHT, 32, 0, 0, 0, 0)
 
     texture = app.renderer.createTexture(
-        sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_STREAMING, 320, 200);
+        sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_STREAMING, SCREENWIDTH, SCREENHEIGHT);
 
     screens[0] = cast[ptr UncheckedArray[byte]](surface.pixels)
     
@@ -109,7 +111,7 @@ proc I_FinishUpdate*(): void {.exportc.} =
     var pixels: pointer
 
     discard sdl.lockTexture(texture, nil, addr(pixels), addr(pitch))
-    discard sdl.convertPixels(320, 200, 
+    discard sdl.convertPixels(SCREENWIDTH, SCREENHEIGHT, 
         psurface.format.format, 
         psurface.pixels, psurface.pitch, 
         sdl.PIXELFORMAT_RGBA8888, pixels, pitch)
@@ -117,14 +119,8 @@ proc I_FinishUpdate*(): void {.exportc.} =
     discard app.renderer.renderCopy(texture, nil, nil)
     app.renderer.renderPresent();
 
-template `\\`(x: untyped): untyped = cast[ptr type(x[0])](addr x)
-
 proc I_SetPalette*(palette: ptr byte): void {.exportc.} =
     #echo "> I_SetPalette"
-
-    # echo $palette[]
-
-    # var palette = cast[ptr UncheckedArray[byte]](palette_void_ptr)
     var pi: int = 0
     var c: byte
     var firstcall = true
