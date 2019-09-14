@@ -9,6 +9,7 @@ import os
 {.passC:"-I" & currentSourcePath().splitPath.head .}
 
 import sdl2/sdl
+import strformat
 import doomdef
 import d_event
 
@@ -71,12 +72,12 @@ proc I_InitGraphics*(): void {.exportc.} =
     )
 
     if app.window == nil:
-        I_Error("ERROR: Can't create window: ")
+        I_Error(&"ERROR: Can't create window: {sdl.getError()}")
 
     # Create renderer
     app.renderer = sdl.createRenderer(app.window, -1, RendererFlags)
     if app.renderer == nil:
-        I_Error("ERROR: Can't create renderer: ")
+        I_Error(&"ERROR: Can't create renderer: {sdl.getError()}")
     
     discard sdl.setHint(sdl.HINT_RENDER_SCALE_QUALITY, "nearest")
     discard app.renderer.renderSetLogicalSize(320, 200)
@@ -87,10 +88,12 @@ proc I_InitGraphics*(): void {.exportc.} =
     texture = app.renderer.createTexture(
         sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_STREAMING, 320, 200);
 
-
     screens[0] = cast[ptr UncheckedArray[byte]](surface.pixels)
     
 proc I_ShutdownGraphics*(): void {.exportc.} =
+    sdl.freeSurface(surface)
+    sdl.freeSurface(psurface)
+    sdl.destroyTexture(texture)
     app.renderer.destroyRenderer()
     app.window.destroyWindow()
     sdl.quit()
