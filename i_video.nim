@@ -1,45 +1,32 @@
-{.emit: """
-#include "doomstat.h"
-#include "v_video.h"
-#include "d_main.h"
-#include "doomdef.h"
-""".}
-
 import os
-{.passC:"-I" & currentSourcePath().splitPath.head .}
-
 import sdl2/sdl
 import strformat
 import doomdef
 import d_event
+import math
+import logging
 
-var firsttimee = true
-var X_width: cint
-var X_height: cint
-const multiply: cint = 1
-var colors: array[256, sdl.Color]
+var 
+    colors: array[256, sdl.Color]
+    X_width: cint
+    X_height: cint
+    lastMouseButtonState: uint32
+    window: sdl.Window
+    renderer: sdl.Renderer 
+    surface: sdl.Surface
+    psurface: sdl.Surface
+    texture: sdl.Texture
 
-const
-  Title = "nimrod00m"
-  WindowFlags = 0
-  RendererFlags = sdl.RendererAccelerated
+    menuactive {.importc, header:"doomstat.h".} : bool
+    paused {.importc, header:"doomstat.h".} : bool
+    gamestate {.importc, header:"doomstat.h".} : gamestate_t
 
-
-type
-  App = ref AppObj
-  AppObj = object
-    window*: sdl.Window # Window pointer
-    renderer*: sdl.Renderer # Rendering state pointer
-
-var app = App(window: nil, renderer: nil)
-var surface: Surface
-var psurface: Surface
-var texture: Texture
-
-const SCREENWIDTH: cint = SCREENWIDTH 
-const SCREENHEIGHT: cint = SCREENHEIGHT
-const WINWIDTH: cint = SCREENWIDTH 
-const WINHEIGHT: cint = SCREENHEIGHT
+const 
+    WINWIDTH: cint = SCREENWIDTH * 2 
+    WINHEIGHT: cint = SCREENHEIGHT * 2
+    Title = "nimrod00m"
+    WindowFlags = 0
+    RendererFlags = sdl.RendererAccelerated
 
 proc I_Quit {.importc, header:"i_system.h", noconv.}
 proc I_Error(error: cstring) {.importc, header:"i_system.h", noconv.}
@@ -52,10 +39,6 @@ var usegamma {.importc, header:"v_video.h".}: cint
 proc I_InitGraphics*(): void {.exportc.} =
     echo "> I_InitGraphics: " & $SCREENWIDTH & " " & $SCREENHEIGHT
     
-    #if not firsttime:
-    #    return
-    #firsttime = false
-
     setControlCHook(I_Quit);
 
     X_width = SCREENWIDTH;
@@ -64,7 +47,7 @@ proc I_InitGraphics*(): void {.exportc.} =
     if init(sdl.InitVideo) == -1:
         I_Error("SDL initializing error")
     
-    app.window = sdl.createWindow(
+    window = sdl.createWindow(
         Title,
         sdl.WindowPosUndefined,
         sdl.WindowPosUndefined,
@@ -73,21 +56,21 @@ proc I_InitGraphics*(): void {.exportc.} =
         WindowFlags
     )
 
-    if app.window == nil:
+    if window == nil:
         I_Error(&"ERROR: Can't create window: {sdl.getError()}")
 
     # Create renderer
-    app.renderer = sdl.createRenderer(app.window, -1, RendererFlags)
-    if app.renderer == nil:
+    renderer = sdl.createRenderer(window, -1, RendererFlags)
+    if renderer == nil:
         I_Error(&"ERROR: Can't create renderer: {sdl.getError()}")
     
     discard sdl.setHint(sdl.HINT_RENDER_SCALE_QUALITY, "nearest")
-    discard app.renderer.renderSetLogicalSize(SCREENWIDTH, SCREENHEIGHT)
+    discard renderer.renderSetLogicalSize(SCREENWIDTH, SCREENHEIGHT)
 
     surface = sdl.createRGBSurface(0, SCREENWIDTH, SCREENHEIGHT, 8, 0, 0, 0, 0)
     psurface = sdl.createRGBSurface(0, SCREENWIDTH, SCREENHEIGHT, 32, 0, 0, 0, 0)
 
-    texture = app.renderer.createTexture(
+    texture = renderer.createTexture(
         sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_STREAMING, SCREENWIDTH, SCREENHEIGHT);
 
     screens[0] = cast[ptr UncheckedArray[byte]](surface.pixels)
@@ -96,16 +79,45 @@ proc I_ShutdownGraphics*(): void {.exportc.} =
     sdl.freeSurface(surface)
     sdl.freeSurface(psurface)
     sdl.destroyTexture(texture)
-    app.renderer.destroyRenderer()
-    app.window.destroyWindow()
+    renderer.destroyRenderer()
+    window.destroyWindow()
     sdl.quit()
 
 proc I_UpdateNoBlit*(): void {.exportc.} =
     #echo "> I_UpdateNoBlit"
     discard
 
+proc I_ShouldGrabMouse(): bool =
+
+    if window == nil:
+        return false
+
+    if sdl.getMouseFocus() != addr(window):
+        return false
+    
+    if menuactive or paused:
+        return false
+    
+    return gamestate == GS_LEVEL
+
+var grabbed: bool
+
+proc I_SetGrabMouse(grab: bool) =
+    discard sdl.showCursor(cint(grab));
+
+    if grab and not grabbed:
+        sdl.setWindowGrab(window, true)
+    else: 
+        if not grab and grabbed:
+            sdl.warpMouseInWindow(addr(window), WINWIDTH - 10 * cint(WINHEIGHT / SCREENWIDTH), WINHEIGHT - 16);
+    
+    grabbed = grab
+
 proc I_FinishUpdate*(): void {.exportc.} =
     #echo "> I_FinishUpdate"
+
+    I_SetGrabMouse(I_ShouldGrabMouse())
+
     discard sdl.blitSurface(surface, nil, psurface, nil)
     var pitch: cint
     var pixels: pointer
@@ -116,18 +128,13 @@ proc I_FinishUpdate*(): void {.exportc.} =
         psurface.pixels, psurface.pitch, 
         sdl.PIXELFORMAT_RGBA8888, pixels, pitch)
     sdl.unlockTexture(texture)
-    discard app.renderer.renderCopy(texture, nil, nil)
-    app.renderer.renderPresent();
+    discard renderer.renderCopy(texture, nil, nil)
+    renderer.renderPresent();
 
 proc I_SetPalette*(palette: ptr byte): void {.exportc.} =
     #echo "> I_SetPalette"
-    var pi: int = 0
+    
     var c: byte
-    var firstcall = true
-
-    if firstcall:
-        firstcall = false
-
     var pp: ptr byte = palette
 
     proc inc(): ptr byte =
@@ -158,8 +165,9 @@ proc I_ReadScreen*(src: ptr UncheckedArray[byte]) {.exportc.} =
 
 proc xlatekey*(e: Event): cint {.exportc.} =
     var rc: cint
+
     case e.key.keysym.sym:
-        of sdl.K_LEFT:
+        of K_LEFT:
             rc = KEY_LEFTARROW
         of K_RIGHT:
             rc = KEY_RIGHTARROW
@@ -209,13 +217,36 @@ proc xlatekey*(e: Event): cint {.exportc.} =
             rc = KEY_RSHIFT
         of K_LCTRL, K_RCTRL:
             rc = KEY_RCTRL
-        of K_LALT, K_LGUI, K_RALT, K_RGUI:
-            rc = KEY_RALT  
+        of K_LALT, K_LGUI:
+            rc = KEY_LALT
+        of K_RALT, K_RGUI:
+            rc = KEY_RALT
         else: 
+            rc = cint(e.key.keysym.sym)
             if rc >= 65 and rc <= 90: # [a-zA-Z]
                 rc = rc + 32
                 
     return rc
+
+proc I_PollMouse() =
+
+    var
+        x: cint
+        y: cint
+        px = addr(x)
+        py = addr(y)
+        buttonState: uint32
+    
+    buttonState = sdl.getRelativeMouseState(px, py)
+
+    if x != 0 or y != 0 or buttonState != lastMouseButtonState:
+        var e: event_t
+        e.`type` = ev_mouse
+        e.data1 = cint(buttonState)
+        e.data2 = x
+        e.data3 = -y
+        D_PostEvent(addr(e))
+        lastMouseButtonState = buttonState
 
 proc I_ProcessEvent*(e: Event) {.exportc.} =
     var event: event_t
@@ -227,6 +258,7 @@ proc I_ProcessEvent*(e: Event) {.exportc.} =
         of sdl.KeyUp:
             event.`type` = ev_keyup
             event.data1 = xlatekey(e)
+            discard
         of sdl.Quit:
             I_Quit();
         else:
@@ -236,9 +268,8 @@ proc I_ProcessEvent*(e: Event) {.exportc.} =
 
 proc I_StartTic() {.exportc.} =
     #echo "> I_StartTic"
-    if app.window == nil:
-        echo "> screen is nil"
-        return
+    
+    I_PollMouse()    
 
     var e: sdl.Event
 

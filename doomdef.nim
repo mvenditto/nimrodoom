@@ -122,14 +122,6 @@ const
 const
   TICRATE* = 35
 
-##  The current state of the game: whether we are
-##  playing, gazing at the intermission screen,
-##  the game final animation, or a demo.
-
-type
-  gamestate_t* = enum
-    GS_LEVEL, GS_INTERMISSION, GS_FINALE, GS_DEMOSCREEN
-
 
 ##
 ##  Difficulty/skill settings/filters.
@@ -210,6 +202,18 @@ type
 ##
 
 """
+
+##  The current state of the game: whether we are
+##  playing, gazing at the intermission screen,
+##  the game final animation, or a demo.
+
+type
+  gamestate_t* = enum
+    GS_LEVEL, GS_INTERMISSION, GS_FINALE, GS_DEMOSCREEN
+
+const
+  SCREENWIDTH* = 320
+  SCREENHEIGHT* = 200
 
 const
   KEY_RIGHTARROW* = 0x000000AE
