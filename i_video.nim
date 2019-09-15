@@ -6,6 +6,31 @@ import d_event
 import math
 import logging
 
+const keysMap: array[0..103, int] = [                                      
+    0, 0, 0, 0, 'a'.int,                                  
+    'b'.int, 'c'.int, 'd'.int, 'e'.int, 'f'.int,                                               
+    'g'.int, 'h'.int, 'i'.int, 'j'.int, 'k'.int,                                  
+    'l'.int, 'm'.int, 'n'.int, 'o'.int, 'p'.int,                                                
+    'q'.int, 'r'.int, 's'.int, 't'.int, 'u'.int,                                  
+    'v'.int, 'w'.int, 'x'.int, 'y'.int, 'z'.int,                                                
+    '1'.int, '2'.int, '3'.int, '4'.int, '5'.int,                                  
+    '6'.int, '7'.int, '8'.int, '9'.int, '0'.int,                                               
+    KEY_ENTER, KEY_ESCAPE, KEY_BACKSPACE, KEY_TAB, ' '.int,       
+    KEY_MINUS, KEY_EQUALS, '['.int, ']'.int, '\\'.int,                                  
+    0, ';'.int, '\\'.int, '`'.int, ','.int,                                
+    '.'.int, '/'.int, KEY_CAPSLOCK, KEY_F1, KEY_F2,                                 
+    KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7,                  
+    KEY_F8, KEY_F9, KEY_F10, KEY_F11, KEY_F12,                             
+    KEY_PRTSCR, KEY_SCRLCK, KEY_PAUSE, KEY_INS, KEY_HOME,     
+    KEY_PGUP, KEY_DEL, KEY_END, KEY_PGDN, KEY_RIGHTARROW,                  
+    KEY_LEFTARROW, KEY_DOWNARROW, KEY_UPARROW,              
+    KEY_NUMLOCK, KEYP_DIVIDE.int,                                               
+    KEYP_MULTIPLY.int, KEYP_MINUS.int, KEYP_PLUS.int, 
+    KEYP_ENTER, KEYP_1, KEYP_2, KEYP_3, KEYP_4, KEYP_5, KEYP_6,                  
+    KEYP_7, KEYP_8, KEYP_9, KEYP_0, KEYP_PERIOD,                            
+    0, 0, 0, KEYP_EQUALS,                                     
+]
+
 var 
     colors: array[256, sdl.Color]
     X_width: cint
@@ -164,8 +189,23 @@ proc I_ReadScreen*(src: ptr UncheckedArray[byte]) {.exportc.} =
     copyMem(src, screens[0], SCREENWIDTH * SCREENHEIGHT)
 
 proc xlatekey*(e: Event): cint {.exportc.} =
-    var rc: cint
-
+    var scancode = e.key.keysym.scancode
+    case scancode:
+        of SCANCODE_LCTRL, SCANCODE_RCTRL:
+            return KEY_RCTRL
+        of SCANCODE_LSHIFT, SCANCODE_RSHIFT:
+            return KEY_RSHIFT
+        of SCANCODE_LALT:
+            return KEY_LALT
+        of SCANCODE_RALT:
+            return KEY_RALT
+        else:
+            var sc: int = scancode.int
+            if sc >= 0 and sc < keysMap.len:
+                return keysMap[scancode]
+            else:
+                return 0
+    discard """
     case e.key.keysym.sym:
         of K_LEFT:
             rc = KEY_LEFTARROW
@@ -225,8 +265,7 @@ proc xlatekey*(e: Event): cint {.exportc.} =
             rc = cint(e.key.keysym.sym)
             if rc >= 65 and rc <= 90: # [a-zA-Z]
                 rc = rc + 32
-                
-    return rc
+        """
 
 proc I_PollMouse() =
 
