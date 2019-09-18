@@ -9,9 +9,13 @@ import sugar
 import streams
 import colorize
 import m_swap_h
+import ptrutils
 
 when not defined(debug):
     import z_zone_h
+    #proc Z_Malloc(size: cint; tag: cint; `ptr`: pointer): pointer {.importc, header:"z_zone.h".} 
+    #proc Z_Free(`ptr`: pointer) {.importc, header:"z_zone.h".}
+    proc Z_ChangeTag(`ptr`: pointer; tag: cint) {.importc, header:"z_zone.h".}
     proc I_Error(msg: cstring) {.importc, header:"i_system.h", varargs.}
 else:
     proc Z_Malloc(size: cint; tag: cint; `ptr`: pointer): pointer =
@@ -178,9 +182,6 @@ proc W_AddFile*(fname: cstring) {.exportc.} =
     if reloadname != nil:
       discard close(handle)
 
-    
-
-
 proc W_Reload*() {.exportc.} =
     var header: wadinfo_t
     var lumpcount: cint
@@ -214,12 +215,10 @@ proc W_Reload*() {.exportc.} =
     lump_p = cast[ptr lumpinfo_t](cast[uint](lumpinfo) + tmp)
 
     var i: cint = reloadlump
-    var lcache = cast[ptr UncheckedArray[pointer]](lumpcache)
     
     while (i < reloadlump + lumpcount):
-
-        if lcache[i] != nil:
-            Z_Free(lumpcache[i])
+        if lumpcache[i] != nil:
+            Z_Free(addr(lumpcache[i]))
         lump_p.position = LONG(fileinfo.filepos)
         lump_p.size = LONG(fileinfo.size)
         i = i + 1
@@ -247,14 +246,15 @@ proc W_InitMultipleFiles*(filenames: cstringArray) {.exportc.} =
 
     echo &"lumpcache alloc numlump = {numlumps}"
     size = numlumps * cint(sizeof(pointer))
-    echo &"lumpcache alloc: {size}"
     lumpcache = cast[ptr UncheckedArray[pointer]](alloc(size))
 
     if lumpcache == nil:
         echo "could not allocate lumpcache"
     
-    zeroMem(lumpcache, size)
-
+   
+    for i in 0..numlumps-1:
+        lumpcache[i] = cast[pointer](0)
+        
 
 proc W_InitFile*(filename: cstring) {.exportc.} =
     var names: array[2, string]
@@ -280,7 +280,7 @@ proc lumpNameToStr(arr: array[0..7, char]): string =
 
 proc W_CheckNumForName*(name: cstring): cint {.exportc.} =
     var upper = ($name).substr(0,7).toUpperAscii()
-
+    
     var idx = numlumps - 1
 
     var lump_p = lumpX(idx)
@@ -299,7 +299,7 @@ proc W_GetNumForName*(name: cstring): cint {.exportc.} =
 
     var i = W_CheckNumForName(name)
     if i == -1:
-        I_Error(&"W_GetNumForName: {name} not found!")
+        I_Error(&"!W_GetNumForName: {name} not found! {i}")
     return i
 
 proc W_LumpLength*(lump: cint): cint {.exportc.} =
@@ -334,12 +334,15 @@ proc W_ReadLump*(lump: cint, dest: pointer) {.exportc.} =
             close(file)    
 
 proc W_CacheLumpNum*(lump: cint, tag: cint): pointer {.exportc.} = 
-   
+    
     if lump >= numlumps:
         I_Error(&"W_CacheLumpNum {lump} >= numlumps ({numlumps})")
     
     if lumpcache[lump] == nil:
-        discard Z_Malloc(W_LumpLength(lump), tag, addr(lumpcache[lump]))
+        var size: cint = W_LumpLength(lump)
+        echo &"lump: {lump} => {cast[uint](lumpcache[lump])}"
+        discard Z_Malloc(size, tag, addr(lumpcache[lump]))
+        echo &"lump: {lump} => {cast[uint](lumpcache[lump])}"
         W_ReadLump(lump, lumpcache[lump])
     else:
         Z_ChangeTag(lumpcache[lump], tag)
@@ -347,5 +350,4 @@ proc W_CacheLumpNum*(lump: cint, tag: cint): pointer {.exportc.} =
     return lumpcache[lump]
         
 proc W_CacheLumpName*(lump: cstring, tag: cint): pointer {.exportc.} =
-    let lumpNum = W_GetNumForName(lump)
-    return W_CacheLumpNum(lumpNum, tag)
+    return W_CacheLumpNum(W_GetNumForName(lump), tag)

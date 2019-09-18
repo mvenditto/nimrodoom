@@ -26,7 +26,7 @@
 ##  ZONE MEMORY
 ##  PU - purge tags.
 ##  Tags < 100 are not overwritten until freed.
-
+discard """
 const
   PU_STATIC* = 1
   PU_SOUND* = 2
@@ -37,6 +37,8 @@ const
   PU_PURGELEVEL* = 100
   PU_CACHE* = 101
 
+  ZONEID = 0x1d4a11
+
 type
   memblock_s* {.bycopy.} = object
     size*: cint                ##  including the header and possibly tiny fragments
@@ -45,6 +47,14 @@ type
     id*: cint                  ##  should be ZONEID
     next*: ptr memblock_s
     prev*: ptr memblock_s
+
+  memzone_t* {.bycopy.} = object
+    size*: cint
+    blocklist*: memblock_t
+    rover*: ptr memblock_t
+  
+  memblock_t* = memblock_s
+
 
 proc Z_Init*() {.importc, header:"z_zone.h".} 
 proc Z_Malloc*(size: cint; tag: cint; `ptr`: pointer): pointer {.importc, header:"z_zone.h".} 
@@ -56,9 +66,50 @@ proc Z_CheckHeap*() {.importc, header:"z_zone.h".}
 proc Z_ChangeTag2*(`ptr`: pointer; tag: cint) {.importc, header:"z_zone.h".} 
 proc Z_FreeMemory*(): cint {.importc, header:"z_zone.h".} 
 
-template Z_ChangeTag*(p, t: untyped): void =
-  let pp = cast[uint](p) - sizeof(memblock_s).uint
+
+template Z_ChangeTag*(p, t: untyped) =
+  let pp = cast[uint](p) - uint(sizeof(memblock_s))
   if cast[ptr memblock_s](pp).id != 0x1d4a11:
     let(file, line, col) = instantiationInfo()
-    I_Error("Z_CT at: " & $file & ":" & $line & ":" & $col);
-  Z_ChangeTag2(p,t);
+    I_Error("Z_CT at: " & $(cast[ptr memblock_s](pp).id) & " : " & $file & ":" & $line & ":" & $col);
+  Z_ChangeTag2(p, t);
+"""
+
+const
+  PU_STATIC* = 1
+  PU_SOUND* = 2
+  PU_MUSIC* = 3
+  PU_DAVE* = 4
+  PU_LEVEL* = 50
+  PU_LEVSPEC* = 51
+  PU_PURGELEVEL* = 100
+  PU_CACHE* = 101
+
+  ZONEID* = 0x1d4a11
+  MAINFRAGMENT* = 64
+
+type
+  memblock_s* {.bycopy.} = object
+    size*: cint                ##  including the header and possibly tiny fragments
+    user*: ptr pointer         ##  NULL if a free block
+    tag*: cint                 ##  purgelevel
+    id*: cint                  ##  should be ZONEID
+    next*: ptr memblock_s
+    prev*: ptr memblock_s
+
+  memzone_t*  {.bycopy.} = object
+    size*: cint
+    blocklist*: memblock_t
+    rover*: ptr memblock_t
+  
+  memblock_t* {.bycopy.} = memblock_s
+
+proc Z_Init*() {.importc, header:"z_zone.h".} 
+proc Z_Malloc*(size: cint; tag: cint; `ptr`: pointer): pointer {.importc, header:"z_zone.h".} 
+proc Z_Free*(`ptr`: pointer) {.importc, header:"z_zone.h".} 
+proc Z_FreeTags*(lowtag: cint; hightag: cint) {.importc, header:"z_zone.h".} 
+proc Z_DumpHeap*(lowtag: cint; hightag: cint) {.importc, header:"z_zone.h".} 
+proc Z_FileDumpHeap*(f: ptr FILE) {.importc, header:"z_zone.h".} 
+proc Z_CheckHeap*() {.importc, header:"z_zone.h".} 
+proc Z_ChangeTag2*(`ptr`: pointer; tag: cint) {.importc, header:"z_zone.h".} 
+proc Z_FreeMemory*(): cint {.importc, header:"z_zone.h".} 

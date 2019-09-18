@@ -44,6 +44,7 @@
 #define PU_CACHE		101
 
 
+
 void	Z_Init (void);
 void*	Z_Malloc (int size, int tag, void *ptr);
 void    Z_Free (void *ptr);
@@ -51,7 +52,7 @@ void    Z_FreeTags (int lowtag, int hightag);
 void    Z_DumpHeap (int lowtag, int hightag);
 void    Z_FileDumpHeap (FILE *f);
 void    Z_CheckHeap (void);
-void    Z_ChangeTag2 (void *ptr, int tag);
+void    Z_ChangeTag2 (void *ptr, int tag, char *file, int line);
 int     Z_FreeMemory (void);
 
 
@@ -65,6 +66,20 @@ typedef struct memblock_s
     struct memblock_s*	prev;
 } memblock_t;
 
+typedef struct
+{
+    // total bytes malloced, including header
+    int		size;
+
+    // start / end cap for linked list
+    memblock_t	blocklist;
+    
+    memblock_t*	rover;
+    
+} memzone_t;
+
+extern memzone_t *mainzone;
+
 //
 // This is used to get the local FILE:LINE info from CPP
 // prior to really call the function in question.
@@ -73,7 +88,7 @@ typedef struct memblock_s
 { \
       if (( (memblock_t *)( (byte *)(p) - sizeof(memblock_t)))->id!=0x1d4a11) \
 	  I_Error("Z_CT at "__FILE__":%i",__LINE__); \
-	  Z_ChangeTag2(p,t); \
+	  Z_ChangeTag2(p,t, __FILE__, __LINE__); \
 };
 
 
