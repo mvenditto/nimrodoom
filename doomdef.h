@@ -267,7 +267,7 @@ typedef enum
 #define KEY_F11		(0x80+0x57)
 #define KEY_F12		(0x80+0x58)
 
-#define KEY_BACKSPACE	127
+#define KEY_BACKSPACE	0x7f
 #define KEY_PAUSE	0xff
 
 #define KEY_EQUALS	0x3d
@@ -278,6 +278,39 @@ typedef enum
 #define KEY_RALT	(0x80+0x38)
 
 #define KEY_LALT	KEY_RALT
+
+// new keys:
+
+#define KEY_CAPSLOCK    (0x80+0x3a)
+#define KEY_NUMLOCK     (0x80+0x45)
+#define KEY_SCRLCK      (0x80+0x46)
+#define KEY_PRTSCR      (0x80+0x59)
+
+#define KEY_HOME        (0x80+0x47)
+#define KEY_END         (0x80+0x4f)
+#define KEY_PGUP        (0x80+0x49)
+#define KEY_PGDN        (0x80+0x51)
+#define KEY_INS         (0x80+0x52)
+#define KEY_DEL         (0x80+0x53)
+
+#define KEYP_0          KEY_INS
+#define KEYP_1          KEY_END
+#define KEYP_2          KEY_DOWNARROW
+#define KEYP_3          KEY_PGDN
+#define KEYP_4          KEY_LEFTARROW
+#define KEYP_5          (0x80+0x4c)
+#define KEYP_6          KEY_RIGHTARROW
+#define KEYP_7          KEY_HOME
+#define KEYP_8          KEY_UPARROW
+#define KEYP_9          KEY_PGUP
+
+#define KEYP_DIVIDE     '/'
+#define KEYP_PLUS       '+'
+#define KEYP_MINUS      '-'
+#define KEYP_MULTIPLY   '*'
+#define KEYP_PERIOD     0
+#define KEYP_EQUALS     KEY_EQUALS
+#define KEYP_ENTER      KEY_ENTER
 
 
 

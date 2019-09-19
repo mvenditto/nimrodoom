@@ -122,14 +122,6 @@ const
 const
   TICRATE* = 35
 
-##  The current state of the game: whether we are
-##  playing, gazing at the intermission screen,
-##  the game final animation, or a demo.
-
-type
-  gamestate_t* = enum
-    GS_LEVEL, GS_INTERMISSION, GS_FINALE, GS_DEMOSCREEN
-
 
 ##
 ##  Difficulty/skill settings/filters.
@@ -211,6 +203,18 @@ type
 
 """
 
+##  The current state of the game: whether we are
+##  playing, gazing at the intermission screen,
+##  the game final animation, or a demo.
+
+type
+  gamestate_t* = enum
+    GS_LEVEL, GS_INTERMISSION, GS_FINALE, GS_DEMOSCREEN
+
+const
+  SCREENWIDTH* = 320
+  SCREENHEIGHT* = 200
+
 const
   KEY_RIGHTARROW* = 0x000000AE
   KEY_LEFTARROW* = 0x000000AC
@@ -231,7 +235,7 @@ const
   KEY_F10* = (0x00000080 + 0x00000044)
   KEY_F11* = (0x00000080 + 0x00000057)
   KEY_F12* = (0x00000080 + 0x00000058)
-  KEY_BACKSPACE* = 127
+  KEY_BACKSPACE* = 0x0000007F
   KEY_PAUSE* = 0x000000FF
   KEY_EQUALS* = 0x0000003D
   KEY_MINUS* = 0x0000002D
@@ -239,6 +243,62 @@ const
   KEY_RCTRL* = (0x00000080 + 0x0000001D)
   KEY_RALT* = (0x00000080 + 0x00000038)
   KEY_LALT* = KEY_RALT
+
+##  new keys:
+
+const
+  KEY_CAPSLOCK* = (0x00000080 + 0x0000003A)
+  KEY_NUMLOCK* = (0x00000080 + 0x00000045)
+  KEY_SCRLCK* = (0x00000080 + 0x00000046)
+  KEY_PRTSCR* = (0x00000080 + 0x00000059)
+  KEY_HOME* = (0x00000080 + 0x00000047)
+  KEY_END* = (0x00000080 + 0x0000004F)
+  KEY_PGUP* = (0x00000080 + 0x00000049)
+  KEY_PGDN* = (0x00000080 + 0x00000051)
+  KEY_INS* = (0x00000080 + 0x00000052)
+  KEY_DEL* = (0x00000080 + 0x00000053)
+  KEYP_0* = KEY_INS
+  KEYP_1* = KEY_END
+  KEYP_2* = KEY_DOWNARROW
+  KEYP_3* = KEY_PGDN
+  KEYP_4* = KEY_LEFTARROW
+  KEYP_5* = (0x00000080 + 0x0000004C)
+  KEYP_6* = KEY_RIGHTARROW
+  KEYP_7* = KEY_HOME
+  KEYP_8* = KEY_UPARROW
+  KEYP_9* = KEY_PGUP
+  KEYP_DIVIDE* = '/'
+  KEYP_PLUS* = '+'
+  KEYP_MINUS* = '-'
+  KEYP_MULTIPLY* = '*'
+  KEYP_PERIOD* = 0
+  KEYP_EQUALS* = KEY_EQUALS
+  KEYP_ENTER* = KEY_ENTER
+
+const ScancodesSDLtoDoom*: array[0..103, int] = [                                      
+    0, 0, 0, 0, 'a'.int,                                  
+    'b'.int, 'c'.int, 'd'.int, 'e'.int, 'f'.int,                                               
+    'g'.int, 'h'.int, 'i'.int, 'j'.int, 'k'.int,                                  
+    'l'.int, 'm'.int, 'n'.int, 'o'.int, 'p'.int,                                                
+    'q'.int, 'r'.int, 's'.int, 't'.int, 'u'.int,                                  
+    'v'.int, 'w'.int, 'x'.int, 'y'.int, 'z'.int,                                                
+    '1'.int, '2'.int, '3'.int, '4'.int, '5'.int,                                  
+    '6'.int, '7'.int, '8'.int, '9'.int, '0'.int,                                               
+    KEY_ENTER, KEY_ESCAPE, KEY_BACKSPACE, KEY_TAB, ' '.int,       
+    KEY_MINUS, KEY_EQUALS, '['.int, ']'.int, '\\'.int,                                  
+    0, ';'.int, '\\'.int, '`'.int, ','.int,                                
+    '.'.int, '/'.int, KEY_CAPSLOCK, KEY_F1, KEY_F2,                                 
+    KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7,                  
+    KEY_F8, KEY_F9, KEY_F10, KEY_F11, KEY_F12,                             
+    KEY_PRTSCR, KEY_SCRLCK, KEY_PAUSE, KEY_INS, KEY_HOME,     
+    KEY_PGUP, KEY_DEL, KEY_END, KEY_PGDN, KEY_RIGHTARROW,                  
+    KEY_LEFTARROW, KEY_DOWNARROW, KEY_UPARROW,              
+    KEY_NUMLOCK, KEYP_DIVIDE.int,                                               
+    KEYP_MULTIPLY.int, KEYP_MINUS.int, KEYP_PLUS.int, 
+    KEYP_ENTER, KEYP_1, KEYP_2, KEYP_3, KEYP_4, KEYP_5, KEYP_6,                  
+    KEYP_7, KEYP_8, KEYP_9, KEYP_0, KEYP_PERIOD,                            
+    0, 0, 0, KEYP_EQUALS,                                     
+]
 
 ##  DOOM basic types (boolean),
 ##   and max/min values.
