@@ -70,7 +70,6 @@ OBJS=				\
 		$(O)/hu_stuff.o		\
 		$(O)/hu_lib.o			\
 		$(O)/s_sound.o		\
-		$(O)/z_zone.o			\
 		$(O)/info.o				\
 		$(O)/sounds.o
 

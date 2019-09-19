@@ -62,5 +62,5 @@
 | `tables.c` |  |  |  |
 | `v_video.c` |  |  |  |
 | `wi_stuff.c` |  |  |  |
-| `w_wad.c` | :construction: | :hankey: | `w_wad.nim` |
-| `z_zone.c` |  |  | `z_zone_h.nim*` |
+| `w_wad.c` | :construction: |  | `w_wad.nim` |
+| `z_zone.c` | :hammer: |  | `z_zone.nim`, `z_zone_h.nim*` |
