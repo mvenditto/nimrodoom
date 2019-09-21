@@ -19,7 +19,7 @@
 | `info.c` |  |  |  |
 | `i_sound.c` |  |  |  |
 | `i_system.c` |  |  |  |
-| `i_video.c` | :construction: | SDL1.2 based | `i_video.nim` |
+| `i_video.c` | :construction: | SDL2 based | `i_video.nim` |
 | `m_argv.c` |  |  |  |
 | `m_bbox.c` |  |  |  |
 | `m_cheat.c` |  |  |  |
