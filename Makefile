@@ -7,7 +7,7 @@
 CC=  gcc  # gcc or g++
 
 CFLAGS=-g -Wl,--no-as-needed -DNORMALUNIX -DLINUX # -DUSEASM 
-LDFLAGS=-L/usr/lib/nim/ -L/vagrant
+LDFLAGS=-L/usr/lib/nim/ -L/vagrant -DSND_SERV
 LIBS=-lnsl -lm -ldl
 
 # subdirectory for objects
@@ -57,7 +57,6 @@ OBJS=				\
 		$(O)/p_user.o			\
 		$(O)/r_bsp.o			\
 		$(O)/r_data.o			\
-		$(O)/r_draw.o			\
 		$(O)/r_main.o			\
 		$(O)/r_plane.o		\
 		$(O)/r_segs.o			\

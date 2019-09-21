@@ -64,7 +64,7 @@ proc I_InitGraphics*(): void {.exportc.} =
     if renderer == nil:
         I_Error(&"ERROR: Can't create renderer: {sdl.getError()}")
     
-    discard sdl.setHint(sdl.HINT_RENDER_SCALE_QUALITY, "nearest")
+    discard sdl.setHint(sdl.HINT_RENDER_SCALE_QUALITY, "trilinear")
     discard renderer.renderSetLogicalSize(SCREENWIDTH, SCREENHEIGHT)
 
     surface = sdl.createRGBSurface(0, SCREENWIDTH, SCREENHEIGHT, 8, 0, 0, 0, 0)

@@ -25,7 +25,7 @@
 ##
 ##  DOOM version
 
-discard """
+
 const
   VERSION* = 110
 
@@ -34,14 +34,14 @@ const
 
 type
   GameMode_t* = enum
-    shareware,                ##  DOOM 1 shareware, E1, M9
-    registered,               ##  DOOM 1 registered, E3, M27
-    commercial,               ##  DOOM 2 retail, E1 M34
+    shareware = 0,                ##  DOOM 1 shareware, E1, M9
+    registered = 1,               ##  DOOM 1 registered, E3, M27
+    commercial = 2,               ##  DOOM 2 retail, E1 M34
                ##  DOOM 2 german edition not handled
-    retail,                   ##  DOOM 1 retail, E4, M36
-    indetermined              ##  Well, no IWAD found.
+    retail = 3,                   ##  DOOM 1 retail, E4, M36
+    indetermined = 4             ##  Well, no IWAD found.
 
-
+discard """
 ##  Mission packs - might be useful for TC stuff?
 
 type
