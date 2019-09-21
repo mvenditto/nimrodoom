@@ -2,6 +2,7 @@ import i_video
 import m_swap
 import w_wad
 import z_zone
+import r_draw
 
 import logging
 import os
