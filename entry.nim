@@ -3,6 +3,7 @@ import m_swap
 import w_wad
 import z_zone
 import r_draw
+import r_plane
 
 import logging
 import os

@@ -10,6 +10,9 @@ from doomdef import SCREENWIDTH, SCREENHEIGHT
 import z_zone_h
 import w_wad
 
+import strformat
+import logging
+
 const
     MAXWIDTH = 1120
     MAXHEIGHT = 832
@@ -364,18 +367,17 @@ proc R_FillBackScreen() {.exportc.} =
         viewwindowy+viewheight,
         1,
         cast[ptr patch_t](W_CacheLumpName("brdr_br",PU_CACHE)))
-    
-#proc R_VideoErase*(ofs: cuint, count: cint) {.exportc.} =
-    #var s0 = cast[pointer](cast[uint](screens[0]) + ofs)
-    #var s1= cast[pointer](cast[uint](screens[1]) + ofs)
-    #copyMem(s0, s1, count)
 
-discard """
+proc R_VideoErase*(ofs: cuint, count: cint) {.exportc.} =
+    var screen0 = cast[uint](screens[0]) + ofs
+    var screen1 = cast[uint](screens[1]) + ofs
+    # debug(&"R_VideoErase {ofs} {count}")
+    copyMem(cast[pointer](screen0), cast[pointer](screen1), count)
+
 proc V_MarkRect(x: cint, y: cint, width: cint, height: cint) {.importc, header:"v_video.h".}
-proc R_VideoErase(ofs: cuint, count: cint) {.importc, header:"r_draw.h".}
 
 proc R_DrawViewBorder*() {.exportc.} =
-    var
+    var 
         top: cint
         side: cint
         ofs: cint
@@ -383,94 +385,26 @@ proc R_DrawViewBorder*() {.exportc.} =
     if scaledviewwidth == SCREENWIDTH:
         return
     
-    top = (((SCREENHEIGHT-SBARHEIGHT)-viewheight)/2).cint
-    side = ((SCREENWIDTH-scaledviewwidth)/2).cint
+    top = ((SCREENHEIGHT-SBARHEIGHT)-viewheight) shr 1
+    side = (SCREENWIDTH-scaledviewwidth) shr 1
 
-    R_VideoErase(0, top*SCREENWIDTH+side)
-
-    ofs = (viewheight+top)*SCREENWIDTH-side
-    R_VideoErase(ofs.cuint, top*SCREENWIDTH+side)
-
+    # copy top and one line of left side 
+    R_VideoErase(0, top*SCREENWIDTH+side); 
+ 
+    # copy one line of right side and bottom 
+    ofs = (viewheight+top)*SCREENWIDTH-side; 
+    R_VideoErase(ofs.cuint, top*SCREENWIDTH+side);
+ 
+    # copy sides using wraparound 
     ofs = top*SCREENWIDTH + SCREENWIDTH-side
     side = side shl 1
 
-    for i in 1..viewwidth-1:
+    for i in 1..viewheight - 1:
         R_VideoErase(ofs.cuint, side)
         ofs += SCREENWIDTH
-
-    V_MarkRect(0,0,SCREENWIDTH, SCREENHEIGHT-SBARHEIGHT)    
-"""
-
+    
+    V_MarkRect(0,0,SCREENWIDTH, SCREENHEIGHT-SBARHEIGHT)
 
 {.emit: """/*VARSECTION*/ 
 NIM_EXTERNC
-
-#define MAXWIDTH			1120
-#define MAXHEIGHT			832
-#define SBARHEIGHT		32
-
-// just for profiling
-int			dscount;
-
-void
-R_VideoErase
-( unsigned	ofs,
-  int		count ) 
-{ 
-  // LFB copy.
-  // This might not be a good idea if memcpy
-  //  is not optiomal, e.g. byte by byte on
-  //  a 32bit CPU, as GNU GCC/Linux libc did
-  //  at one point.
-    memcpy (screens[0]+ofs, screens[1]+ofs, count); 
-} 
-
-
-//
-// R_DrawViewBorder
-// Draws the border around the view
-//  for different size windows?
-//
-
-
-void
-V_MarkRect
-( int		x,
-  int		y,
-  int		width,
-  int		height ); 
- 
-void R_DrawViewBorder (void) 
-{ 
-    int		top;
-    int		side;
-    int		ofs;
-    int		i; 
- 
-    if (scaledviewwidth == SCREENWIDTH) 
-	return; 
-  
-    top = ((SCREENHEIGHT-SBARHEIGHT)-viewheight)/2; 
-    side = (SCREENWIDTH-scaledviewwidth)/2; 
- 
-    // copy top and one line of left side 
-    R_VideoErase (0, top*SCREENWIDTH+side); 
- 
-    // copy one line of right side and bottom 
-    ofs = (viewheight+top)*SCREENWIDTH-side; 
-    R_VideoErase (ofs, top*SCREENWIDTH+side); 
- 
-    // copy sides using wraparound 
-    ofs = top*SCREENWIDTH + SCREENWIDTH-side; 
-    side <<= 1;
-    
-    for (i=1 ; i<viewheight ; i++) 
-    { 
-	R_VideoErase (ofs, side); 
-	ofs += SCREENWIDTH; 
-    } 
-
-    // ? 
-    V_MarkRect (0,0,SCREENWIDTH, SCREENHEIGHT-SBARHEIGHT); 
-}
 """.}

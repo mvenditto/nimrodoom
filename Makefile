@@ -58,7 +58,6 @@ OBJS=				\
 		$(O)/r_bsp.o			\
 		$(O)/r_data.o			\
 		$(O)/r_main.o			\
-		$(O)/r_plane.o		\
 		$(O)/r_segs.o			\
 		$(O)/r_sky.o			\
 		$(O)/r_things.o		\
