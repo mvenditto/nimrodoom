@@ -16,7 +16,7 @@ import logging
 const
     MAXWIDTH = 1120
     MAXHEIGHT = 832
-    FRACBITS = 16
+    FRACBITS* = 16
     SBARHEIGHT = 32
     FUZZTABLE = 50 
     FUZZOFF = SCREENWIDTH
@@ -57,13 +57,13 @@ var
     translationtables {.exportc.}: ptr UncheckedArray[byte]
 
 var
-    ds_xfrac {.exportc.}: fixed_t
-    ds_yfrac {.exportc.}: fixed_t
-    ds_xstep {.exportc.}: fixed_t
-    ds_ystep {.exportc.}: fixed_t
-    ds_y {.exportc}: cint
-    ds_x1 {.exportc}: cint
-    ds_x2 {.exportc}: cint
+    ds_xfrac* {.exportc.}: fixed_t
+    ds_yfrac* {.exportc.}: fixed_t
+    ds_xstep* {.exportc.}: fixed_t
+    ds_ystep* {.exportc.}: fixed_t
+    ds_y* {.exportc}: cint
+    ds_x1* {.exportc}: cint
+    ds_x2* {.exportc}: cint
     ds_colormap {.exportc.}: ptr UncheckedArray[lighttable_t]
     ds_source {.exportc.}: ptr UncheckedArray[byte]
     gamemode {.exportc.}: GameMode_t

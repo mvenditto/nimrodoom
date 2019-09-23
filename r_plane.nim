@@ -16,13 +16,31 @@ from doomtypes import
     planefunction_t,
     visplane_t,
     lighttable_t,
-    fixed_t
+    fixed_t,
+    angle_t,
+    FINEANGLES
+
+from r_draw import
+    ds_xfrac, 
+    ds_yfrac, 
+    ds_xstep, 
+    ds_ystep ,
+    ds_y,
+    ds_x1,
+    ds_x2 
+
 
 from doomdef import SCREENWIDTH, SCREENHEIGHT
+from tables import finesine
+import r_main_h
+
+import logging
 
 const
     MAXVISPLANES = 128
     MAXOPENINGS = SCREENWIDTH*64
+    ANGLETOFINESHIFT = 19 #tables
+    
 
 var
     floorfunc {.importc, header:"r_plane.h".}: planefunction_t
@@ -47,6 +65,75 @@ var
     cacheddistance {.exportc.}: array[SCREENHEIGHT, fixed_t]
     cachedxstep {.exportc.}: array[SCREENHEIGHT, fixed_t]
     cachedystep {.exportc.}: array[SCREENHEIGHT, fixed_t]
+
+type 
+    VoidProc = (proc(): void {.cdecl.})
+
+var
+    
+    viewangle {.exportc.}: angle_t
+    xtoviewangle {.importc, header:"r_main.h".} : array[SCREENWIDTH+1, angle_t] 
+    viewx {.importc, header:"r_main.h".}: fixed_t
+    viewy {.importc, header:"r_main.h".}: fixed_t
+    
+    finecosine = finesine[2048..^1] 
+    fixedcolormap {.importc, header:"r_main.h"}: ptr UncheckedArray[lighttable_t]
+    ds_colormap {.importc, header:"r_draw.h".}: ptr UncheckedArray[lighttable_t]
+    # colfunc* {.importc, header:"r_main.h".}: VoidProc
+    # basecolfunc* {.importc, header:"r_main.h".}: VoidProc
+    # fuzzcolfunc* {.importc, header:"r_main.h".}: VoidProc
+    # transcolfunc* {.importc, header:"r_main.h".}: VoidProc
+    spanfunc {.importc, header:"r_main.h".}: VoidProc
+
+
+
+proc FixedMul(a: fixed_t, b: fixed_t) : fixed_t {.importc, header:"m_fixed.h"}
+
+
+proc R_MapPlane*(y: cint, x1: cint, x2: cint) {.exportc.} =
+    var
+        angle: angle_t
+        distance: fixed_t
+        length: fixed_t
+        index: cuint
+    
+    if planeheight != cachedheight[y]:
+        cachedheight[y] = planeheight
+        distance = FixedMul(planeheight, yslope[y])
+        cacheddistance[y] = distance
+        cachedxstep[y] = FixedMul(distance, basexscale)
+        ds_xstep = cachedxstep[y]
+        cachedystep[y] = FixedMul(distance, baseyscale)
+        ds_ystep = cachedystep[y] 
+    else:
+        distance = cacheddistance[y];
+        ds_xstep = cachedxstep[y];
+        ds_ystep = cachedystep[y];
+
+        
+    length = FixedMul(distance, distscale[x1]);
+    angle = (viewangle + xtoviewangle[x1]) shr ANGLETOFINESHIFT
+    ds_xfrac = viewx + FixedMul(finecosine[angle], length)
+    ds_yfrac = -viewy - FixedMul(finesine[angle], length)
+
+    if addr(fixedcolormap[0]) != nil:
+        ds_colormap = fixedcolormap
+    else:
+        index = cuint(distance shr LIGHTZSHIFT)
+        if index >= MAXLIGHTZ:
+            index = MAXLIGHTZ - 1
+        ds_colormap = cast[ptr UncheckedArray[lighttable_t]]( 
+            cast[ptr UncheckedArray[ptr lighttable_t]](planezlight)[index]
+        )
+    
+    ds_y = y
+    ds_x1 = x1
+    ds_x2 = x2
+
+    spanfunc();
+
+
+
 {.emit: """/*VARSECTION*/ 
 NIM_EXTERNC
 #define MAXVISPLANES 128
@@ -128,6 +215,8 @@ void R_InitPlanes(void) {
 //
 // BASIC PRIMITIVE
 //
+
+/*
 void
 R_MapPlane
     (int y,
@@ -180,7 +269,7 @@ R_MapPlane
 
         // high or low detail
         spanfunc();
-    }
+    }*/
 
 //
 // R_ClearPlanes
