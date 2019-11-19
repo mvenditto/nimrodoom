@@ -1,5 +1,7 @@
 ### a nim-infused port of linuxxdoom
 
+build guide coming soon !
+
 | file | ported to nim | notes | output |
 |:--- | :---: | :---: | :--- |
 | `am_map.c` |  |  |  |
